@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">LockScreenDemo</string>
+    <string name="enable">Enable Lock Screen </string>
+    <string name="comment">Lock screen by covering it.</string>
+    <string name="disable">Disable Lock Screen</string>
+</resources>
