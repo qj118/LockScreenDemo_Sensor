@@ -1,6 +1,9 @@
 package com.demon.lockscreendemo;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -10,6 +13,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -17,15 +21,21 @@ import android.widget.Button;
 
 public class MainActivity extends Activity{
 
+    private static final String TAG = "LockScreen";
+    private static final int DEFAULT_NOTIFICATION_ID = 5;
+
     Button mEnableButton;
     boolean mFlag = false;
 
-    private static final String TAG = "LockScreen";
     Sensor mProximity;
     SensorManager mSensorManager;
     SensorEventListener mSensorEventListener;
+
     DevicePolicyManager mDPM;
     ComponentName mDeviceComponentName;
+
+    NotificationManager mNotifyManager;
+    NotificationCompat.Builder mBuilder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +61,12 @@ public class MainActivity extends Activity{
                     }
                     else{
                         Log.i(TAG, "Unauthorized");
-                        activeManage();
+                        try {
+                            activeManage();
+                        }catch (Exception ex)
+                        {
+                            ex.printStackTrace();
+                        }
                         mDPM.lockNow();
                     }
                 }
@@ -74,12 +89,14 @@ public class MainActivity extends Activity{
                     mFlag = true;
                     mEnableButton.setText(R.string.disable);
                     mSensorManager.registerListener(mSensorEventListener, mProximity, SensorManager.SENSOR_DELAY_NORMAL);
+                    sendNotification();
                 }
                 else
                 {
                     mFlag = false;
                     mEnableButton.setText(R.string.enable);
                     mSensorManager.unregisterListener(mSensorEventListener, mProximity);
+                    mNotifyManager.cancel(DEFAULT_NOTIFICATION_ID);
                 }
             }
         });
@@ -92,6 +109,20 @@ public class MainActivity extends Activity{
         intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceComponentName);
         intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Other description");
         startActivityForResult(intent, 0);
+    }
+
+    private void sendNotification()
+    {
+        Intent mainIntent = new Intent(this, MainActivity.class);
+        PendingIntent mainPendingIntent = PendingIntent.getActivity(this, 0, mainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        mNotifyManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        mBuilder = new NotificationCompat.Builder(this).setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("Sensor Lock Screen")
+                .setContentText("Sensor Lock Screen Enabled")
+                .setContentIntent(mainPendingIntent);
+        Notification notification = mBuilder.build();
+        notification.flags |= Notification.FLAG_NO_CLEAR;
+        mNotifyManager.notify(DEFAULT_NOTIFICATION_ID, notification);
     }
 
     private void simulateHome()
