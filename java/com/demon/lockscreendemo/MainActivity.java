@@ -50,27 +50,24 @@ public class MainActivity extends Activity{
                 Log.i(TAG, "onSensorChanged...");
                 float thisVal = event.values[0];
                 Log.i(TAG, ((Float)thisVal).toString());
-                if(thisVal == 0.0)
-                {
+                if(thisVal == 0.0) {
                     Log.i(TAG, "The distance is less than target.");
                     boolean active = mDPM.isAdminActive(mDeviceComponentName);
-                    if(active)
-                    {
-                        Log.i(TAG, "Authorized");
-                        mDPM.lockNow();
-                    }
-                    else{
-                        Log.i(TAG, "Unauthorized");
-                        try {
-                            activeManage();
-                        }catch (Exception ex)
+                    try {
+                            if (active) {
+                                Log.i(TAG, "Authorized");
+                                mDPM.lockNow();
+                            } else {
+                                Log.i(TAG, "Unauthorized");
+                                activeManage();
+                            }
+                            mDPM.lockNow();
+                        }catch(Exception e)
                         {
-                            ex.printStackTrace();
+                            e.printStackTrace();
                         }
-                        mDPM.lockNow();
                     }
                 }
-            }
 
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
